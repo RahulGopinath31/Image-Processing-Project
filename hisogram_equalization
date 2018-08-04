@@ -1,0 +1,80 @@
+clear all;
+close all;
+clc;
+
+
+% convert image to gray
+im = imread('university.png');
+im_gray = rgb2gray(im);
+figure(),imshow(im_gray),title('gray image');
+[imRo,imCol] = size(im_gray);
+
+
+% range: detemines the overall contrast of the picture
+range = 255;
+number = imRo*imCol;
+
+%% Plotting histogram
+pixel_at_level = zeros(1,256); %array to store the number of times each pixel intensity appears
+
+
+% loop through all the pixel position in the picture
+for i = 1:imRo
+    for j = 1:imCol
+        temp_int = im_gray(i,j);
+        pixel_at_level(temp_int+1) = pixel_at_level(temp_int+1)+1;  
+    end
+end
+
+
+%plotting the histogram using stem plot
+X = linspace(0,255,256);
+figure()
+stem(X,pixel_at_level)
+title('histogram of image')
+xlabel('gray intensity value')
+ylabel('No of pixels with intensity level')
+
+
+
+%% Calculate cdf for equalization.
+intensity_cdf = zeros(size(pixel_at_level));
+temp = 0;
+for gray_level = 0:1:255
+    temp = temp+pixel_at_level(gray_level+1);
+    intensity_cdf(gray_level+1) = temp;    
+end
+
+%Equalizing the histogram and plot the equalized histogram
+h = zeros(size(pixel_at_level));
+for i = 1:1:256
+    h(i) = (((intensity_cdf(i) - 1)/(number-1)) * range);
+end
+
+figure()
+stem(X,h)
+title('histogram equalization of image')
+xlabel('gray intensity value')
+ylabel('No of pixels with intensity level')
+
+% apply the normalization to original image.
+histEq = im_gray;
+for i = 1:imRo
+    for j = 1:imCol
+        temp_int = im_gray(i,j);
+        histEq(i,j) = ceil(h(temp_int+1));
+    end
+end
+
+figure()
+imshow(histEq)
+
+%{
+
+%Plot all the images in single window.
+figure()
+subplot(2,2,1),imshow(im_gray),title('gray scale original image');
+subplot(2,2,2),stem(X,pixel_at_level),title('histogram of image'),xlabel('gray intensity value'),ylabel('No of pixels with intensity level');
+subplot(2,2,3),imshow(histEq),title('Hist Eq of original image');
+subplot(2,2,4),stem(X,h),title('histogram equalization of image'),xlabel('gray intensity value'),ylabel('No of pixels with intensity level');
+%}
